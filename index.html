@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grand Livre — Santé financière</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --paper:#F3ECD9;
+  --paper-dark:#E8DFC6;
+  --ink:#1E2E22;
+  --ink-soft:#41523F;
+  --pine:#16241B;
+  --pine-light:#233A29;
+  --gold:#C7972B;
+  --gold-soft:#E3C377;
+  --debit-red:#A23B2E;
+  --credit-green:#3F6B4C;
+  --rule:#c9bd9a;
+  --shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--pine);
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(199,151,43,0.08), transparent 40%),
+    radial-gradient(circle at 80% 90%, rgba(199,151,43,0.06), transparent 40%);
+  color:var(--ink);
+  font-family:'Source Sans 3', sans-serif;
+  min-height:100vh;
+  padding-bottom:60px;
+}
+.app{max-width:720px;margin:0 auto;padding:18px 14px 40px;}
+
+/* HEADER */
+header.masthead{
+  text-align:center;
+  padding:28px 10px 20px;
+  color:var(--paper);
+}
+header.masthead .eyebrow{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.25em;
+  text-transform:uppercase;
+  color:var(--gold-soft);
+  margin-bottom:6px;
+}
+header.masthead h1{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:2.1rem;
+  margin:0 0 4px;
+  letter-spacing:0.01em;
+}
+header.masthead .sub{
+  font-size:13px;
+  color:#C9D3C6;
+  font-style:italic;
+}
+header.masthead .date-line{
+  margin-top:10px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  color:var(--gold-soft);
+  border-top:1px solid rgba(227,195,119,0.3);
+  border-bottom:1px solid rgba(227,195,119,0.3);
+  display:inline-block;
+  padding:5px 14px;
+}
+
+/* NAV TABS */
+nav.tabs{
+  display:flex;
+  overflow-x:auto;
+  gap:2px;
+  margin-bottom:16px;
+  background:var(--pine-light);
+  border-radius:10px;
+  padding:4px;
+  -webkit-overflow-scrolling:touch;
+}
+nav.tabs button{
+  flex:1 0 auto;
+  background:transparent;
+  border:none;
+  color:#B9C4B6;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  letter-spacing:0.03em;
+  padding:10px 8px;
+  border-radius:7px;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:all .15s ease;
+}
+nav.tabs button.active{
+  background:var(--gold);
+  color:var(--pine);
+  font-weight:600;
+}
+
+/* PANEL / LEDGER SHEET */
+.sheet{
+  background:var(--paper);
+  border-radius:4px;
+  box-shadow:var(--shadow);
+  padding:20px 16px;
+  margin-bottom:16px;
+  position:relative;
+  background-image: repeating-linear-gradient(transparent, transparent 27px, var(--rule) 28px);
+  background-position: 0 62px;
+}
+.sheet.no-lines{background-image:none;}
+.sheet h2{
+  font-family:'Fraunces', serif;
+  font-size:1.25rem;
+  font-weight:600;
+  margin:0 0 4px;
+  color:var(--pine);
+}
+.sheet .sheet-sub{
+  font-size:12.5px;
+  color:var(--ink-soft);
+  margin-bottom:16px;
+  font-style:italic;
+}
+
+/* SUMMARY CARDS */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.card{
+  background:var(--paper);
+  border-radius:4px;
+  box-shadow:var(--shadow);
+  padding:14px 14px 12px;
+  border-left:4px solid var(--gold);
+}
+.card.debit{border-left-color:var(--debit-red);}
+.card.credit{border-left-color:var(--credit-green);}
+.card .label{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:var(--ink-soft);
+  margin-bottom:6px;
+}
+.card .value{
+  font-family:'Fraunces', serif;
+  font-size:1.5rem;
+  font-weight:600;
+  color:var(--pine);
+}
+.card .note{font-size:11px;color:var(--ink-soft);margin-top:3px;}
+
+/* LEDGER ROWS */
+.ledger-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 0;
+  border-bottom:1px solid var(--rule);
+  gap:10px;
+}
+.ledger-row:last-child{border-bottom:none;}
+.ledger-row .desc{flex:1;min-width:0;}
+.ledger-row .desc .name{font-weight:600;font-size:14.5px;color:var(--pine);}
+.ledger-row .desc .meta{font-family:'IBM Plex Mono', monospace;font-size:10.5px;color:var(--ink-soft);}
+.ledger-row .amt{font-family:'IBM Plex Mono', monospace;font-weight:600;font-size:14px;white-space:nowrap;}
+.amt.debit{color:var(--debit-red);}
+.amt.credit{color:var(--credit-green);}
+
+/* FORMS */
+label{display:block;font-family:'IBM Plex Mono', monospace;font-size:10.5px;letter-spacing:0.04em;text-transform:uppercase;color:var(--ink-soft);margin:10px 0 4px;}
+input[type=text],input[type=number],select,textarea{
+  width:100%;
+  background:#fff;
+  border:1px solid var(--rule);
+  border-radius:4px;
+  padding:9px 10px;
+  font-family:'Source Sans 3',sans-serif;
+  font-size:14.5px;
+  color:var(--ink);
+}
+textarea{resize:vertical;min-height:60px;}
+.btn{
+  display:inline-block;
+  background:var(--pine);
+  color:var(--paper);
+  border:none;
+  border-radius:5px;
+  padding:10px 16px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  letter-spacing:0.03em;
+  cursor:pointer;
+  margin-top:12px;
+}
+.btn.gold{background:var(--gold);color:var(--pine);font-weight:600;}
+.btn.outline{background:transparent;border:1px solid var(--pine);color:var(--pine);}
+.btn.small{padding:6px 10px;font-size:11px;margin-top:0;}
+.btn.danger{background:var(--debit-red);color:#fff;}
+.row-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+
+/* PROGRESS */
+.progress-wrap{margin:12px 0 4px;}
+.progress-bar{
+  height:16px;
+  background:#DCD1AE;
+  border-radius:8px;
+  overflow:hidden;
+  position:relative;
+  border:1px solid var(--rule);
+}
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg, var(--credit-green), var(--gold));
+  border-radius:8px 0 0 8px;
+  transition:width .4s ease;
+}
+.progress-label{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11px;
+  color:var(--ink-soft);
+  margin-top:4px;
+  display:flex;
+  justify-content:space-between;
+}
+
+/* STAMP */
+.stamp{
+  display:inline-block;
+  border:2px solid var(--credit-green);
+  color:var(--credit-green);
+  font-family:'IBM Plex Mono', monospace;
+  font-weight:700;
+  font-size:11px;
+  letter-spacing:0.1em;
+  padding:4px 10px;
+  border-radius:3px;
+  transform:rotate(-3deg);
+  text-transform:uppercase;
+}
+
+canvas{max-width:100%;}
+.chart-wrap{margin-top:8px;}
+
+.divider{
+  border:none;
+  border-top:1px dashed var(--rule);
+  margin:16px 0;
+}
+
+.footer-note{
+  text-align:center;
+  color:#8fa08d;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px;
+  margin-top:24px;
+  padding:0 20px;
+}
+
+.empty{
+  text-align:center;
+  color:var(--ink-soft);
+  font-style:italic;
+  font-size:13px;
+  padding:18px 0;
+}
+
+.tag{
+  display:inline-block;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9.5px;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  padding:2px 7px;
+  border-radius:3px;
+  background:var(--paper-dark);
+  color:var(--ink-soft);
+  margin-left:6px;
+}
+.tag.closed{background:#ddd;color:#777;text-decoration:line-through;}
+
+details.info{
+  background:var(--paper-dark);
+  border-radius:4px;
+  padding:10px 12px;
+  margin:12px 0;
+  font-size:13px;
+}
+details.info summary{cursor:pointer;font-weight:600;color:var(--pine);font-size:13px;}
+details.info p{margin:8px 0 2px;color:var(--ink-soft);line-height:1.5;}
+
+.iconrow{display:flex;align-items:center;gap:8px;}
+.checkline{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--rule);}
+.checkline:last-child{border-bottom:none;}
+.checkline input{width:auto;}
+.checkline.done .clabel{text-decoration:line-through;color:var(--ink-soft);}
+
+@media (max-width:400px){
+  header.masthead h1{font-size:1.7rem;}
+  .cards{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="masthead">
+    <div class="eyebrow">Registre personnel</div>
+    <h1>Grand Livre</h1>
+    <div class="sub">Dettes • Épargne • Crédit — à ton rythme</div>
+    <div class="date-line" id="todayLine">—</div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="overview" class="active">Vue d'ensemble</button>
+    <button data-tab="dettes">Dettes</button>
+    <button data-tab="budget">Budget</button>
+    <button data-tab="epargne">Épargne</button>
+    <button data-tab="credit">Crédit</button>
+    <button data-tab="investir">Investir</button>
+    <button data-tab="journal">Journal</button>
+  </nav>
+
+  <!-- OVERVIEW -->
+  <section class="tab-panel" id="panel-overview">
+    <div class="cards">
+      <div class="card debit">
+        <div class="label">Solde dettes total</div>
+        <div class="value" id="ov-total-debt">—</div>
+        <div class="note" id="ov-debt-note">—</div>
+      </div>
+      <div class="card credit">
+        <div class="label">Épargne cumulée</div>
+        <div class="value" id="ov-total-savings">—</div>
+        <div class="note" id="ov-savings-note">Solde suivi manuellement</div>
+      </div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Répartition de la paie</h2>
+      <div class="sheet-sub">Par paie biweekly — priorités fixes, extra modéré</div>
+      <label>Revenu net par paie ($)</label>
+      <input type="number" id="ov-income" step="0.01" placeholder="ex: 1200.00">
+      <label>Dîme (%)</label>
+      <input type="number" id="ov-tithe-pct" step="1" value="10">
+      <label>Épargne (%)</label>
+      <input type="number" id="ov-save-pct" step="1" value="10">
+      <button class="btn gold" onclick="saveIncomeSplit()">Enregistrer</button>
+      <div id="ov-split-result" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Progression globale</h2>
+      <div class="sheet-sub">Dette de départ vs. solde actuel</div>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="ov-progress-fill" style="width:0%"></div></div>
+        <div class="progress-label"><span id="ov-progress-pct">0%</span><span id="ov-progress-txt">remboursé</span></div>
+      </div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Résumé budget — mois en cours</h2>
+      <div class="sheet-sub" id="ov-budget-label">—</div>
+      <div id="ov-budget-summary"></div>
+    </div>
+  </section>
+
+  <!-- BUDGET -->
+  <section class="tab-panel" id="panel-budget" style="display:none;">
+    <div class="sheet no-lines">
+      <h2>Ce mois-ci</h2>
+      <div class="sheet-sub" id="budget-month-label">—</div>
+      <div class="cards" id="budget-summary-cards"></div>
+      <div id="budget-category-status"></div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Ajouter une dépense</h2>
+      <label>Catégorie</label>
+      <select id="exp-category"></select>
+      <label>Montant ($)</label>
+      <input type="number" id="exp-amount" step="0.01">
+      <label>Date</label>
+      <input type="text" id="exp-date" placeholder="AAAA-MM-JJ">
+      <label>Note (optionnel)</label>
+      <input type="text" id="exp-note" placeholder="ex: Épicerie IGA">
+      <button class="btn gold" onclick="addExpense()">+ Ajouter la dépense</button>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Catégories & limites mensuelles</h2>
+      <div id="budget-category-list"></div>
+      <button class="btn outline" onclick="openCategoryForm()">+ Ajouter une catégorie</button>
+    </div>
+
+    <div id="category-form-wrap" style="display:none;" class="sheet no-lines">
+      <h2>Ajouter / modifier une catégorie</h2>
+      <label>Nom</label>
+      <input type="text" id="cat-name">
+      <label>Limite mensuelle ($)</label>
+      <input type="number" id="cat-limit" step="0.01">
+      <div class="row-actions">
+        <button class="btn gold" onclick="saveCategory()">Enregistrer</button>
+        <button class="btn outline" onclick="closeCategoryForm()">Annuler</button>
+      </div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Tendance mensuelle</h2>
+      <div class="sheet-sub">Dépenses totales, mois par mois — pour voir la lancée</div>
+      <div class="chart-wrap"><canvas id="budgetTrendChart" height="200"></canvas></div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Dépenses du mois</h2>
+      <div id="expense-list"></div>
+    </div>
+  </section>
+
+  <!-- DETTES -->
+  <section class="tab-panel" id="panel-dettes" style="display:none;">
+    <div class="sheet no-lines">
+      <h2>Rythme de remboursement</h2>
+      <div class="sheet-sub">Méthode boule de neige — minimums partout + un extra fixe et modeste</div>
+      <label>Extra fixe par paie, vers la plus petite dette active ($)</label>
+      <input type="number" id="extra-payment" step="1" placeholder="ex: 40">
+      <button class="btn gold" onclick="saveExtra()">Enregistrer le rythme</button>
+      <details class="info">
+        <summary>Pourquoi un extra modeste plutôt que le maximum ?</summary>
+        <p>Un montant fixe et soutenable, payé chaque paie sans exception, bat un montant élevé abandonné après trois paies. La constance compte plus que l'intensité.</p>
+      </details>
+    </div>
+
+    <div class="sheet no-lines">
+      <div class="iconrow" style="justify-content:space-between;">
+        <h2 style="margin:0;">Mes dettes</h2>
+      </div>
+      <div class="sheet-sub">Triées en boule de neige (plus petit solde en premier)</div>
+      <div id="debt-list"></div>
+      <button class="btn outline" onclick="openDebtForm()">+ Ajouter une dette</button>
+    </div>
+
+    <div id="debt-form-wrap" style="display:none;" class="sheet no-lines">
+      <h2>Ajouter / modifier une dette</h2>
+      <label>Nom du créancier</label>
+      <input type="text" id="d-name">
+      <label>Solde actuel ($)</label>
+      <input type="number" id="d-balance" step="0.01">
+      <label>Taux d'intérêt annuel (%)</label>
+      <input type="number" id="d-rate" step="0.01">
+      <label>Paiement minimum biweekly ($)</label>
+      <input type="number" id="d-min" step="0.01">
+      <label>Statut</label>
+      <select id="d-status">
+        <option value="active">Active</option>
+        <option value="closed">Fermée</option>
+      </select>
+      <div class="row-actions">
+        <button class="btn gold" onclick="saveDebt()">Enregistrer</button>
+        <button class="btn outline" onclick="closeDebtForm()">Annuler</button>
+      </div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Trajectoire projetée</h2>
+      <div class="sheet-sub">Solde total des dettes actives, paie par paie</div>
+      <div class="chart-wrap"><canvas id="debtChart" height="200"></canvas></div>
+      <div id="payoff-estimate" class="progress-label" style="margin-top:8px;"></div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="sheet no-lines">
+      <h2>Engagements par tranche</h2>
+      <div class="sheet-sub">Sans intérêt, sans minimum obligatoire — étalés selon ta règle de paliers</div>
+      <details class="info">
+        <summary>Règle de paliers appliquée</summary>
+        <p>300$–500$ → 2 paies · 500$–800$ → 3 paies · Plus de 800$ → jamais plus de 200$/paie (ex: 1000$ = 5 paies). Sous 300$ → 1 paie, à moins que tu changes le nombre manuellement.</p>
+      </details>
+      <label>Nom / description</label>
+      <input type="text" id="e-name" placeholder="ex: Cours de formation">
+      <label>Montant total ($)</label>
+      <input type="number" id="e-amount" step="0.01" oninput="previewInstallments()">
+      <label>Nombre de paies <span style="text-transform:none;font-weight:400;">(calculé automatiquement, modifiable)</span></label>
+      <input type="number" id="e-installments" step="1" min="1">
+      <div id="e-preview" class="progress-label" style="margin:4px 0 0;"></div>
+      <button class="btn gold" onclick="addEngagement()">+ Ajouter l'engagement</button>
+    </div>
+
+    <div class="sheet no-lines">
+      <div id="engagement-list"></div>
+    </div>
+  </section>
+
+  <!-- EPARGNE -->
+  <section class="tab-panel" id="panel-epargne" style="display:none;">
+    <div class="sheet no-lines">
+      <h2>Coussin de sécurité</h2>
+      <div class="sheet-sub">Avant d'accélérer les dettes, viser un petit filet</div>
+      <label>Solde d'épargne actuel ($)</label>
+      <input type="number" id="sav-balance" step="0.01">
+      <label>Cible du coussin d'urgence ($)</label>
+      <input type="number" id="sav-target" step="0.01" placeholder="ex: 1000">
+      <button class="btn gold" onclick="saveSavings()">Enregistrer</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="sav-progress-fill" style="width:0%"></div></div>
+        <div class="progress-label"><span id="sav-progress-pct">0%</span><span id="sav-progress-txt">du coussin</span></div>
+      </div>
+    </div>
+    <div class="sheet no-lines">
+      <h2>Historique d'épargne</h2>
+      <div class="sheet-sub">Ajoute un dépôt à chaque paie où tu épargnes</div>
+      <label>Montant déposé ($)</label>
+      <input type="number" id="sav-deposit" step="0.01">
+      <button class="btn outline" onclick="addSavingsDeposit()">+ Ajouter un dépôt</button>
+      <div class="chart-wrap"><canvas id="savingsChart" height="200"></canvas></div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="sheet no-lines">
+      <h2>Objectifs (enveloppes)</h2>
+      <div class="sheet-sub">Ordre de remplissage : fonds de sécurité → priorité 2 (parallèle) → priorité 3</div>
+      <details class="info">
+        <summary>Comment ça marche</summary>
+        <p>Tant que le fonds de sécurité n'est pas plein, tout va là. Ensuite, les objectifs de priorité 2 se remplissent en parallèle (partagés également). Les objectifs de priorité 3 attendent que tout le reste soit rempli.</p>
+      </details>
+      <label>Contribution totale disponible pour l'épargne, par paie ($)</label>
+      <input type="number" id="goal-contribution" step="0.01" oninput="renderGoalWaterfall()">
+      <div id="goal-waterfall" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Mes enveloppes</h2>
+      <div id="goal-list"></div>
+      <button class="btn outline" onclick="openGoalForm()">+ Ajouter un objectif</button>
+    </div>
+
+    <div id="goal-form-wrap" style="display:none;" class="sheet no-lines">
+      <h2>Ajouter / modifier un objectif</h2>
+      <label>Nom</label>
+      <input type="text" id="g-name">
+      <label>Montant cible ($)</label>
+      <input type="number" id="g-target" step="0.01">
+      <label>Déjà épargné pour cet objectif ($)</label>
+      <input type="number" id="g-saved" step="0.01">
+      <label>Priorité (1 = en premier, 3 = en dernier)</label>
+      <select id="g-priority">
+        <option value="2">2 — en parallèle avec les autres</option>
+        <option value="3">3 — en dernier</option>
+      </select>
+      <label>Date cible (optionnel)</label>
+      <input type="text" id="g-deadline" placeholder="AAAA-MM-JJ, ex: 2027-07-01">
+      <div class="row-actions">
+        <button class="btn gold" onclick="saveGoal()">Enregistrer</button>
+        <button class="btn outline" onclick="closeGoalForm()">Annuler</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREDIT -->
+  <section class="tab-panel" id="panel-credit" style="display:none;">
+    <div class="sheet no-lines">
+      <h2>Capital One</h2>
+      <div class="sheet-sub">Seul produit de crédit actif à faire fructifier</div>
+      <label>Solde actuel ($)</label>
+      <input type="number" id="c1-balance" step="0.01">
+      <label>Limite de crédit ($)</label>
+      <input type="number" id="c1-limit" step="0.01">
+      <button class="btn gold" onclick="saveCapitalOne()">Enregistrer</button>
+      <div class="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="c1-progress-fill" style="width:0%"></div></div>
+        <div class="progress-label"><span id="c1-util-pct">0%</span><span>utilisation — viser sous 30%</span></div>
+      </div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>KOHO Cover <span class="tag" id="koho-tag">à fermer</span></h2>
+      <div class="sheet-sub">Ne rapporte pas au bureau de crédit — à liquider une fois le solde à zéro</div>
+      <label>Solde restant KOHO Cover ($)</label>
+      <input type="number" id="koho-balance" step="0.01">
+      <button class="btn gold" onclick="saveKoho()">Enregistrer</button>
+      <div id="koho-status" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>CIBC</h2>
+      <div class="sheet-sub">Compte fermé — présent uniquement dans l'échéancier de dettes</div>
+      <span class="tag closed">Fermé</span>
+    </div>
+
+    <div class="sheet no-lines">
+      <h2>Liste de contrôle santé de crédit</h2>
+      <div id="credit-checklist"></div>
+    </div>
+  </section>
+
+  <!-- INVESTIR -->
+  <section class="tab-panel" id="panel-investir" style="display:none;">
+    <div class="sheet no-lines">
+      <h2>CELI — priorité future</h2>
+      <div class="sheet-sub">À activer une fois Easy Financière (et autres dettes à intérêt élevé) éliminées</div>
+      <details class="info" open>
+        <summary>Pourquoi attendre ?</summary>
+        <p>Emprunter pour investir ne vaut pas le coup tant qu'une dette à taux élevé (34.70%) est active — aucun rendement de marché raisonnable ne bat ce taux de façon fiable.</p>
+      </details>
+      <details class="info">
+        <summary>Principes directeurs pour plus tard</summary>
+        <p>CELI en priorité (croissance à l'abri de l'impôt), fonds indiciels diversifiés, cotisations automatiques par paie (dollar-cost averaging) plutôt que des essais de timing de marché.</p>
+      </details>
+    </div>
+    <div class="sheet no-lines">
+      <h2>Simulateur — quand pourrai-je commencer ?</h2>
+      <div class="sheet-sub">Basé sur ta trajectoire de dettes actuelle</div>
+      <div id="invest-eta"></div>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section class="tab-panel" id="panel-journal" style="display:none;">
+    <div class="sheet no-lines">
+      <h2>Nouvelle entrée</h2>
+      <label>Note</label>
+      <textarea id="j-note" placeholder="ex: Paiement Easy Financière effectué, 146$"></textarea>
+      <button class="btn gold" onclick="addJournalEntry()">Ajouter au journal</button>
+    </div>
+    <div class="sheet no-lines">
+      <h2>Historique</h2>
+      <div id="journal-list"></div>
+    </div>
+  </section>
+
+  <div class="sheet no-lines">
+    <h2 style="font-size:1rem;">Sauvegarde des données</h2>
+    <div class="sheet-sub">Tes données restent dans ce navigateur seulement. Exporte régulièrement pour ne rien perdre.</div>
+    <div class="row-actions">
+      <button class="btn outline small" onclick="exportData()">Exporter (.json)</button>
+      <button class="btn outline small" onclick="document.getElementById('importFile').click()">Importer</button>
+      <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+      <button class="btn danger small" onclick="resetAll()">Réinitialiser</button>
+    </div>
+  </div>
+
+  <div class="sheet no-lines">
+    <h2 style="font-size:1rem;">Sauvegarde vers Google Sheet</h2>
+    <div class="sheet-sub">Envoi manuel — rien n'est envoyé automatiquement, seulement quand tu cliques.</div>
+    <details class="info">
+      <summary>Configuration (une seule fois, ~10 min)</summary>
+      <p>1. Crée un nouveau Google Sheet (sheets.new).<br>
+      2. Menu Extensions → Apps Script.<br>
+      3. Efface le contenu et colle le code fourni dans le README (section "Google Sheet").<br>
+      4. Clique Déployer → Nouveau déploiement → type "Application Web".<br>
+      5. Exécuter en tant que : Moi. Accès : Tout le monde.<br>
+      6. Clique Déployer, autorise les permissions demandées.<br>
+      7. Copie l'URL qui se termine par <code>/exec</code> et colle-la ci-dessous.</p>
+    </details>
+    <label>URL de ton Google Apps Script</label>
+    <input type="text" id="gs-url" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="btn outline small" onclick="saveGoogleSheetUrl()">Enregistrer l'URL</button>
+    <div class="row-actions">
+      <button class="btn gold small" onclick="saveToGoogleSheet()">📤 Sauvegarder vers Google Sheet</button>
+    </div>
+    <div id="gs-status" class="progress-label" style="margin-top:8px;"></div>
+  </div>
+
+  <div class="footer-note">Grand Livre — registre personnel, hébergé et privé. Aucune donnée n'est envoyée ailleurs.</div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
